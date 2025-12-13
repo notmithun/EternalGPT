@@ -1,5 +1,7 @@
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 app = FastAPI()
 
@@ -11,7 +13,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+class ChatRequest(BaseModel):
+    message: str
 
-@app.get("/")
-def read_root():
-    return {"message": "World"}
+@app.post("/chatAPI")
+async def chatAPI(req: ChatRequest):
+    user_msg = req.message
+    reply = f"**You said**: {user_msg}"
+    return {"reply": reply}
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+if __name__ == "__main__":
+    uvicorn.run(app)
