@@ -11,11 +11,24 @@ export default function Chat() {
     const textareaRef = useRef(null);
     const scrollRef = useRef(null);
     const [error, setError] = useState(null);
+    const prod = false
+    let API;
+    if (!import.meta.env.VITE_API_BASE_URL) {
+        console.warn("Failed to read .env; guessing API's BASE URL")
+        if (prod) {
+            API = `${window.location.protocol}//${window.location.hostname}`
+        } else {
+            API = `${window.location.protocol}//${window.location.hostname}:8000`
+        }
+    } else {
+        API = import.meta.env.VITE_API_BASE_URL
+    }
+    console.info("API BASE URL = " + API);
 
     useEffect(() => {
       async function loadChats() {
         try {
-          const res = await fetch("http://localhost:8000/api/chats/");
+          const res = await fetch(`${API}/api/chats/`);
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data = await res.json();
           setChats(data);
@@ -32,7 +45,7 @@ export default function Chat() {
         try {
             setCurrentChatID(chatId);
 
-            const res = await fetch(`http://localhost:8000/api/chats/${chatId}/`);
+            const res = await fetch(`${API}/api/chats/${chatId}/`);
             const data = await res.json();
             const normalized = data.map(m => ({
                 role: m.role,
@@ -47,7 +60,7 @@ export default function Chat() {
 
     async function createNewChat() {
         try {
-            const res = await fetch(`http://localhost:8000/api/chats/`, {
+            const res = await fetch(`${API}/api/chats/`, {
                 method: 'POST',
             })
             const chat = await res.json();
@@ -67,7 +80,7 @@ export default function Chat() {
             if (!input.trim()) return;
             setMessages(prev => [...prev, {role: "user", text: input}])
             setInput("");
-            const res = await fetch(`http://localhost:8000/api/chats/${currentChatID}/message/`, {
+            const res = await fetch(`${API}/api/chats/${currentChatID}/message/`, {
                 method: 'POST',
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({message: input})

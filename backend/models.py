@@ -14,7 +14,6 @@ class Chat(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(String(255), default="New Chat")
 
-    message: Mapped[List["Message"]] = relationship("Message", back_populates="chat")
     messages: Mapped[List["Message"]] = relationship(
         back_populates="chat",
         cascade="all, delete-orphan"

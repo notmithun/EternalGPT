@@ -22,7 +22,7 @@ from google import genai
 from typing import Any
 
 logger.info("Importing is completed")
-load_dotenv("..//.env")
+load_dotenv(".//.env")
 API_KEY = getenv("GEMINI_API_KEY")
 client = genai.Client(api_key=API_KEY)
 
@@ -41,7 +41,7 @@ app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://localhost:5173", "http://192.168.10.8:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
