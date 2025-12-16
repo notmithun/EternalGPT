@@ -3,6 +3,20 @@ import Sidebar from '../components/sidebar.jsx';
 import ErrPage from '../components/errPage.jsx';
 import ReactMarkdown from 'react-markdown';
 
+const prod = false
+    let _API;
+    if (!import.meta.env.VITE_API_BASE_URL) {
+        console.warn("Failed to read .env; guessing API's BASE URL")
+        if (prod) {
+            _API = `${window.location.protocol}//${window.location.hostname}`
+        } else {
+            _API = `${window.location.protocol}//${window.location.hostname}:8000`
+        }
+    } else {
+        _API = import.meta.env.VITE_API_BASE_URL
+    }
+    console.info("API BASE URL = " + _API);
+
 export default function Chat() {
     const [input, setInput] = useState('');
     const [chats, setChats] = useState([]);
@@ -11,24 +25,11 @@ export default function Chat() {
     const textareaRef = useRef(null);
     const scrollRef = useRef(null);
     const [error, setError] = useState(null);
-    const prod = false
-    let API;
-    if (!import.meta.env.VITE_API_BASE_URL) {
-        console.warn("Failed to read .env; guessing API's BASE URL")
-        if (prod) {
-            API = `${window.location.protocol}//${window.location.hostname}`
-        } else {
-            API = `${window.location.protocol}//${window.location.hostname}:8000`
-        }
-    } else {
-        API = import.meta.env.VITE_API_BASE_URL
-    }
-    console.info("API BASE URL = " + API);
 
     useEffect(() => {
       async function loadChats() {
         try {
-          const res = await fetch(`${API}/api/chats/`);
+          const res = await fetch(`${_API}/api/chats/`);
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data = await res.json();
           setChats(data);
@@ -38,14 +39,14 @@ export default function Chat() {
         }
       }
 
-      loadChats().then(r => console.log(r));
-    }, []);
+      loadChats().then(() => console.log("Rerendered chats!"));
+    }, [currentChatID]);
 
     async function selectChat(chatId) {
         try {
             setCurrentChatID(chatId);
 
-            const res = await fetch(`${API}/api/chats/${chatId}/`);
+            const res = await fetch(`${_API}/api/chats/${chatId}/`);
             const data = await res.json();
             const normalized = data.map(m => ({
                 role: m.role,
@@ -60,7 +61,7 @@ export default function Chat() {
 
     async function createNewChat() {
         try {
-            const res = await fetch(`${API}/api/chats/`, {
+            const res = await fetch(`${_API}/api/chats/`, {
                 method: 'POST',
             })
             const chat = await res.json();
@@ -80,7 +81,7 @@ export default function Chat() {
             if (!input.trim()) return;
             setMessages(prev => [...prev, {role: "user", text: input}])
             setInput("");
-            const res = await fetch(`${API}/api/chats/${currentChatID}/message/`, {
+            const res = await fetch(`${_API}/api/chats/${currentChatID}/message/`, {
                 method: 'POST',
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({message: input})
@@ -101,11 +102,13 @@ export default function Chat() {
 
     return (
         <div className="flex h-screen text-white bg-gray-950">
-            <Sidebar
-                chats={chats}
-                onSelectChats={selectChat}
-                onNewChat={createNewChat}
-            />
+            <div className="hidden md:block">
+                <Sidebar
+                    chats={chats}
+                    onSelectChats={selectChat}
+                    onNewChat={createNewChat}
+                />
+            </div>
             <div className="flex-1 flex flex-col border-l border-gray-800 max-w-full">
                 <div className="flex-1 overflow-y-auto p-4" ref={scrollRef}>
                     <div className="flex-1 overflow-y-auto p-6 space-y-4">
